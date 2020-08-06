@@ -7,4 +7,44 @@ output: html_document
 
 # Plots with ggplot2
 
-We are going to make plots in R and it's going to be amazing
+library(tidyverse)
+library(readxl)
+library(here)
+
+ca_np <- read_csv(here("data", "ca_np.csv"))
+ci_np <- read_excel(here("data", "ci_np.xlsx"))
+
+## To create a bare-bones ggplot graph, we need to tell R three basic things:
+# We’re using ggplot2::ggplot()
+# Data we’re using & variables we’re plotting (i.e., what is x and/or y?)
+# What type of graph we’re making (the type of geom)
+
+ggplot(data = df_name, aes(x = x_var_name, y = y_var_name)) +
+  geom_type()
+  
+ggplot(data = ci_np, aes(x = year, y= visitors))+ geom_line()
+
+#you can store the first line as an object. Call it gg_base
+#After storing as object, you can change to scatterplot by gg_base+geom_point()
+
+gg_base <- ggplot(data = ci_np, aes(x = year, y = visitors))
+
+##We can change the aesthetics of elements in a ggplot graph by adding arguments within the layer where that element is created.
+#Some common arguments we’ll use first are:
+#color = or colour =: update point or line colors
+#fill =: update fill color for objects with areas
+#linetype =: update the line type (dashed, long dash, etc.)
+#pch =: update the point style
+#size =: update the element size (e.g. of points or line thickness)
+#alpha =: update element opacity (1 = opaque, 0 = transparent)
+
+gg_base+geom_line(color = "purple", linetype = "dashed")
+gg_base+geom_point(color = "purple", pch = 17, size = 4, alpha = 0.5)
+gg_base+geom_line(color = "cyan",size = 3, alpha = 0.8)
+
+##When we want to customize a graph element based on a variable’s characteristic or value, add the argument within aes() in the appropriate geom_*() layer
+
+gg_base+geom_point(aes(size = visitors, color = visitors), alpha = 0.5)
+
+gg_base+geom_col(aes(fill = visitors))
+
