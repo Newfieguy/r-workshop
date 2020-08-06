@@ -52,7 +52,11 @@ gg_base+geom_col(aes(fill = visitors))
 
 gg_base+geom_point(aes(size = visitors,color = visitors),alpha = 0.5) + theme_light()
 
-gg_base + geom_line(linetype = "dotted") +theme_bw() +labs(x = "Year",y = "Annual park visitors",title = "Channel Islands NP Visitation", subtitle = "(1963 - 2016)")
+gg_base + geom_line(linetype = "dotted") +theme_bw() +labs(
+x = "Year",
+y = "Annual park visitors",
+title = "Channel Islands NP Visitation", 
+subtitle = "(1963 - 2016)")
 
 ##As long as the geoms are compatible, we can layer them on top of one another to further customize a graph.
 
@@ -86,3 +90,5 @@ gg_np +
 #dpi =: set dpi (dots per inch)
 
 ggsave(here("figures", "np_graph.jpg"), dpi = 180, width = 8, height = 7)  
+
+##Pivot Tables with dplyr
