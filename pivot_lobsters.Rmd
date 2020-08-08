@@ -1,0 +1,73 @@
+---
+title: "pivot_lobsters.Rmd"
+author: "Alex Walker"
+date: "07/08/2020"
+output: html_document
+---
+
+##This is for Dplyr setup.
+#### attach libraries
+library(tidyverse)
+library(readxl)
+library(here)
+library(skimr) #install.packages('skimr')
+install.packages("kableExtra", dependencies = TRUE) #install.packages('kableExtra')
+
+## Read in Data
+
+lobsters <- read_xlsx(here("data/lobsters.xlsx"), skip=4)
+
+##Skimr
+
+#One can look at a summary of statistics using summary(); however, it doesn't give a lot of useful information for non-numerical data. We instead use skimr
+#skim lets us look more at each variable. We can look at our variables and see that there are 5 unique sites (in the n_unique output). Also, I particularly like looking at missing data. There are 6 missing values in the size_mm variable.
+
+skimr::skim(lobsters)
+
+## Group_by() %>% summarize()
+#In R you can create pivot tables by using the above formula. This gives you the functionality of pivot tables in R. Note: The %>% operator is very important. It allows one to combine steps of data cleaning
+#data %>% group_by(X) %>% summarize (Y = Z)
+
+lobsters %>%
+  group_by(year) %>%
+  summarize(count_by_year = n())
+  
+##What if we want to group by more than one variable? This time let's group by site and year, not just year.
+
+lobsters %>%
+  group_by(site, year) %>%
+  summarize(count_by_siteyear = n())
+  
+##What is we wanted to summarize multiple varaibles? Say we wanted to calculate the mean and std? Using mean() and sd() we can do that. As well, using the na.rm = TRUE statement allows us to exclude NA data.
+
+lobsters %>%
+  group_by(site, year) %>%
+  summarize(count_by_siteyear =  n(), 
+            mean_size_mm = mean(size_mm, na.rm=TRUE), 
+            sd_size_mm = sd(size_mm, na.rm=TRUE))
+
+## Now we want to save this summary information should we want to recall it later.
+
+siteyear_summary <- lobsters %>%
+  group_by(site, year) %>%
+  summarize(count_by_siteyear =  n(), 
+            mean_size_mm = mean(size_mm, na.rm=TRUE), 
+            sd_size_mm = sd(size_mm, na.rm=TRUE))
+
+siteyear_summary %>%
+  kable()
+
+siteyear_summary <- lobsters %>%
+  group_by(site, year) %>%
+  summarize(count_by_siteyear =  n(), 
+            mean_size_mm = mean(size_mm, na.rm=TRUE), 
+            sd_size_mm = sd(size_mm, na.rm=TRUE),
+            median_size_mm = median(size_mm, na.rm = TRUE))
+
+## a ggplot option:
+ggplot(data = siteyear_summary, aes(x = year, y = median_size_mm, color = site)) +  geom_line() 
+
+##To save this use
+ggsave(here("figures", "lobsters-line.png"))
+
+
