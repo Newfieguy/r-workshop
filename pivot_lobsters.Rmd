@@ -93,4 +93,39 @@ ggplot(siteyear_summary, aes(x = year, y = median_size_mm)) +
             
 ggsave(here("figures", "lobsters-col.png"))
 
-There are `r nrow(Lobsters)` total lobsters included in this report.
+##dplyr::count()
+#IF you want to only summarize by the count, you can use a function called count(). It will group_by the selected varaible.
+
+lobsters %>%
+  count(site, year)
+  
+#This is the same as:
+lobsters %>%
+  group_by(site, year) %>% 
+  summarize(n = n()) %>%
+  ungroup()
+  
+##Mutate()
+#You can begin to operate on the data in columns by using the mutate() function from dplyr. 
+lobsters %>%
+  mutate(size_m = size_mm/1000)
+#this would allow us to create a new column in which the size of the lobsters is now in meters.
+#if we wanted to add a column that had the same value repeated we can pass it through
+
+lobsters_detailed <- lobsters %>%
+  mutate(size_m = size_mm / 1000, 
+         millenia = 2000,
+         observer = "Alex")
+         
+lobsters_detailed
+
+##Select()
+#This part ends with the select() function. This allows us to select only the data that we want to use.
+
+lobsters_detailed %>%
+  select(date,site, size_m)
+
+
+
+         
+         
