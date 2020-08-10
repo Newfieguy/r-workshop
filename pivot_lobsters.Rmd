@@ -11,7 +11,7 @@ library(tidyverse)
 library(readxl)
 library(here)
 library(skimr) #install.packages('skimr')
-install.packages("kableExtra", dependencies = TRUE) #install.packages('kableExtra')
+library(kableExtra) #install.packages("kableExtra", dependencies = TRUE) 
 
 ## Read in Data
 
@@ -70,4 +70,27 @@ ggplot(data = siteyear_summary, aes(x = year, y = median_size_mm, color = site))
 ##To save this use
 ggsave(here("figures", "lobsters-line.png"))
 
+## What if we used the wrong data and we needed to use the other "Lobsters" data?
+# read in data
 
+lobsters <- read_xlsx(here("data/lobsters2.xlsx"), skip =4)
+
+siteyear_summary <- lobsters %>%
+  group_by(site, year) %>%
+  summarize(count_by_siteyear =  n(), 
+            mean_size_mm = mean(size_mm, na.rm = TRUE), 
+            sd_size_mm = sd(size_mm, na.rm = TRUE), 
+            median_size_mm = median(size_mm, na.rm = TRUE), )
+            
+siteyear_summary
+            
+ggplot(data = siteyear_summary, aes(x = year, y = median_size_mm, color = site)) +
+  geom_line()
+            
+ggplot(siteyear_summary, aes(x = year, y = median_size_mm)) +
+  geom_col() +
+  facet_wrap(~site)
+            
+ggsave(here("figures", "lobsters-col.png"))
+
+There are `r nrow(Lobsters)` total lobsters included in this report.
