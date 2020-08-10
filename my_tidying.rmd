@@ -18,4 +18,99 @@ library(readxl)
 
 inverts <- read_excel(here("data","inverts.xlsx"))
 view(inverts)
+summary(inverts)
+names(inverts)
+
+##Reshaping data.
+#Our data is currently in the "Wide Format" meaning that a variable is split over multiple columns. We want to change this to the "Long Format" by gathering the data that is split into into a single column.
+#To do this we use the pivot_lonmger() function. We will gather the data from 2016, 2017, & 2018 and move it into 2 columns. One will contain the year, the other the data.
+
+inverts_long <- pivot_longer(data = inverts, 
+                                    cols = '2016':'2018',
+                                    names_to = "year",
+                                    values_to = "sp_count")
+inverts_long
+#Becuase the years were orginally stored as column names they're treated as characters. To see what class they are:
+
+class(inverts_long$year)
+
+#And to change their class to numerical form:
+
+inverts_long <- inverts_long %>%
+  mutate(year = as.numeric(year))
+  
+#We used mutate() to add a column called year, which contains an as.numeric() version of the existing year variable
+
+class(inverts_long$year) #check again to make sure it's numeric
+
+#What if we wanted to go the other way and transition from long form to wide form? We’ll use pivot_wider() to spread the common_name across multiple columns as follows:
+
+inverts_wide <- inverts_long %>% 
+  pivot_wider(names_from = common_name, 
+                     values_from = sp_count)
+                     
+inverts_wide
+
+#The data related to the name has no been split.
+
+##Janitor
+#Janitor is used for quick data cleaning with functions such as: 
+#janitor::clean_names(): update column headers to a case of your choosing
+#janitor::get_dupes(): see all rows that are duplicates within variables you choose
+#janitor::remove_empty(): remove empty rows and/or columns
+#janitor::adorn_*(): jazz up tables
+
+inverts_wide <- inverts_wide %>% 
+  clean_names()
+names(inverts_wide)  
+
+##How to merge or seperate data from columns
+#Use tidyr::unite() to combine information from multiple columns into a single column
+
+inverts_unite <- inverts_long %>% 
+  unite(col = "site_year", # What to name the new united column
+               c(site, year), # The columns we'll unite (site, year)
+               sep = "_") # How to separate the things we're uniting
+inverts_unite
+
+#Activity - Create a new object called ‘inverts_moyr’, starting from inverts_long, that unites the month and year columns into a single column named “mo_yr”, using a slash “/” as the separator. Then try updating the separator to something else! Like “hello!”.
+
+inverts_moyr <- inverts_long %>%
+  unite(col = "mo_yr", #this is the name of new column
+        c(month, year), #name of columns used
+        sep = "/" )
+inverts_moyr
+
+#tidyr::unite() can also combine information from more than two columns. For example, to combine the site, common_name and year columns from inverts_long, we could use:
+
+# Uniting more than 2 columns: 
+
+inverts_triple_unite <- inverts_long %>% 
+  tidyr::unite(col = "year_site_name",
+               c(year, site, common_name),
+               sep = "-") # Note: this is a dash
+               
+#While tidyr::unite() allows us to combine information from multiple columns, it’s more likely that you’ll start with a single column that you want to split up into pieces.
+#Using tidyr::seperate() we can separate a character column into multiple columns using a regular expression separator
+
+inverts_sep <- inverts_unite %>% 
+  tidyr::separate(site_year, into = c("my_site", "my_year"))
+  
+#We begin by by spliting the inverts_unit that we combined in the above example. 
+
+inverts_sep
+
+#What if we wanted to replace a pattern or something that may be mislabled? Use stringr::str_replace() to automatically replace a string pattern.
+#Note: The pattern will be replaced everywhere - so if you ask to replace “fsh” with “fish”, then “offshore” would be updated to “offishore”. 
+
+#For our data set let's replace california with CA.
+
+ca_abbr <- inverts %>% 
+  mutate(
+    common_name = 
+    str_replace(common_name, 
+              pattern = "california",replacement ="CA")
+
+
+
 
