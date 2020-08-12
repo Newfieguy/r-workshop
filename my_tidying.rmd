@@ -109,7 +109,9 @@ ca_abbr <- inverts %>%
   mutate(
     common_name = 
     str_replace(common_name, 
-              pattern = "california",replacement ="CA")
+              pattern = "california",replacement ="CA"))
+
+ca_abbr
 
 
 
