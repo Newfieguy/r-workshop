@@ -8,3 +8,153 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+library(tidyverse)
+library(readxl)
+library(here)
+library(skimr) #install.packages('skimr')
+library(kableExtra) #install.packages("kableExtra", dependencies = TRUE) 
+
+##FILTERS AND JOINS
+#filter() to conditionally subset our data by rows, and *_join() functions to merge data frames together And we’ll make a nicely formatted HTML table with kable() and kableExtra
+#The combination of filter() and *_join() - to return rows satisfying a condition we specify, and merging data frames by like variables - is analogous to the useful VLOOKUP function in Excel.
+
+#Create new code chunk to read in the 2 files from data subfolder.
+
+fish <- read_csv(here("data","fish.csv"))
+kelp_abur <- read_excel(here("data","kelp.xlsx"), sheet = "abur")
+
+fish
+kelp_abur
+
+view(fish)
+view(kelp_abur)
+
+#Use filter() to let R know which rows you want to keep or exclude, based whether or not their contents match conditions that you set for one or more variables.
+
+#If we want to tell R to only keep observations with "X" name we can! In this case let's only keep the fish with the common name of garibaldi.
+
+fish_garibaldi <- fish %>%
+  filter(common_name == "garibaldi")
+fish_garibaldi  
+
+#Test! Create a subset starting fish data frame, stored as object fish_mohk, that only contains observations from Mohawk Reef (site entered as “mohk”).
+
+fish_mohk <- fish %>%
+  filter(site == "mohk")
+fish_mohk
+
+#You can also filter using numeric coniditons:
+
+fish_over50 <- fish %>%
+  filter(total_count >= 50)
+fish_over50
+
+##Filtering for OR
+#What if we want to return a subset of the data that contains X, Y, OR Z? Say we wanted to see which contained garibaldi, blacksmith OR black surfperch?
+
+#Method 1: ou can indicate OR using the vertical line operator | to indicate “OR”:
+
+fish_3sp <- fish %>%
+  filter(common_name == "garibaldi" |
+         common_name == "blacksmith" |
+         common_name == "black surfperch")
+
+#Alternatively, if you’re looking for multiple matches in the same variable, you can use the %in% operator instead. Use %in% to ask R to look for any matches within a vector:
+
+fish_3sp <- fish %>%
+  filter(common_name %in% c("garibaldi", "blacksmith", "black surfperch"))
+fish_3sp
+
+#Task: Create a subset from fish called fish_gar_2016 that keeps all observations if the year is 2016 OR the common name is “garibaldi.”
+
+names(fish)
+
+fish_gar_2016 <- fish %>%
+  filter(common_name == "garibaldi" |
+         year == "2016")
+fish_gar_2016         
+
+##Filtering to match this AND that. 
+#Sometimes we may only want to keep observations that match any number of coniditons. to do this in filter(), add a comma (or ampersand ‘&’) between arguments for multiple “and” conditions:
+#For example, we may want to create a subset that only returns rows from fish where the year is 2018 and the site is Arroyo Quemado “aque”
+
+aque_2018 <- fish %>%
+  filter(site == "aque", year == "2018")
+aque_2018
+
+#Challenge task: Create a subset from the fish data frame, called low_gb_wr that only contains:
+#observations for garibaldi or rock wrasse
+#AND the total_count is less than or equal to 10
+
+low_gb_wr <- fish %>%
+    filter(common_name == "garibaldi" | 
+           common_name == "rock wrasse",
+           total_count <= 10)
+low_gb_wr    
+
+## stringr::str_detect() to filter by a partial pattern
+#Here, we’ll use stringr::str_detect() to find and keep observations that contain our specified string pattern.
+
+fish_bl <- fish %>%
+  filter(str_detect(common_name, pattern = "black"))
+fish_bl
+
+#Task: Create a new object called fish_it, starting from fish, that only contains observations if the common_name variable contains the string pattern “it”. What species remain?
+
+fish_it <- fish %>%
+  filter(str_detect(common_name, pattern = "it"))
+fish_it
+
+#you can also negate observations by adding the negate = TRUE argument within str_detect().
+
+##dplyr::*_join() to merge data frames
+#There are a number of ways to merge data frames in R. We’ll use full_join(), left_join(), and inner_join() in this session.
+#full_join() - Returns all rows and all columns from both x and y. Where there are not matching values, returns NA for the one missing.
+#left_join(): return all rows from x, and all columns from x and y. Rows in x with no match in y will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned.
+#inner_join(): “returns all rows from x where there are matching values in y, and all columns from x and y. If there are multiple matches between x and y, all combination of the matches are returned.”
+
+##Full_join()
+#When we join data frames in R, we need to tell R a couple of things (and it does the hard joining work for us) 1) Which data frames we want to merge together 2) Which variables to merge by
+# use full_join() to combine kelp_abur and fish:
+
+abur_kelp_fish <- kelp_abur %>%
+  full_join(fish, by = c("year", "site"))
+view(abur_kelp_fish)
+
+##Left_Join(x,y)
+#Merge data frames, keeping everything in the ‘x’ data frame and only matches from the ‘y’ data frame
+#Now, we want to keep all observations in kelp_abur, and merge them with fish while only keeping observations from fish that match an observation within abur.
+
+kelp_fish_left <- kelp_abur %>% 
+  left_join(fish, by = c("year","site"))
+view(kelp_fish_left)
+
+##Inner Joins
+#Use inner_join() if you only want to retain observations that have matches across both data frames.
+#we use inner_join() to merge fish and kelp_abur, then we are asking R to only return observations where the joining variables (year and site) have matches in both data frames
+
+kelp_fish_injoin <- kelp_abur %>% 
+  inner_join(fish, by = c("year", "site"))
+kelp_fish_injoin
+
+##Filter and Join - Together!
+#Let’s complete the following as part of a single sequence (remember, check to see what you’ve produced after each step) to create a new data frame called my_fish_join.
+
+my_fish_join <- fish %>%
+      filter(site == "abur", year == 2017) %>%
+      left_join(kelp_abur, by = c("site", "year")) %>%
+      mutate(fish_per_frond = total_count/total_fronds)
+my_fish_join
+
+##HTML Table with Kable & KableExtra
+
+kable(my_fish_join)
+
+#To spruce up the table use:
+
+my_fish_join %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE)
+
